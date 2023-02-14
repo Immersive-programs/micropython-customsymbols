@@ -1,1 +1,104 @@
 # micropython-customsymbols
+
+# English: 
+
+#todo
+<details>
+<summary> <b></b> (<i>click to expand</i>)</summary>
+
+</details>
+
+# Русский: 
+
+<details>
+<summary> <b></b> (<i>нажмите, чтобы развернуть</i>)</summary>
+
+## Небольшая библиотека для отрисовки собственных символов
+
+### Принцип работы:
+
+Работа осуществляется при помощи встраивания в дисплейные библеотеки-драйверы основанные на framebuf и перехвата символа с последующей его отрисовкой. Замена осуществляется алгоритмом состоящих из базовых команд для framebuf таких, как pixel, line...
+
+### Пример работы:
+
+```Python
+from customsymbols import CustomSymbols
+from machine import Pin, SPI
+from st7565 import ST7565
+
+'''Создаём новый класс с влюченным в него CustomSymbols'''
+class ST7565(ST7565, CustomSymbols): pass
+
+import sys
+import os
+
+if 'symbols' in os.listdir('/'):
+    sys.path.append("symbols")# добавляем папку с символами
+else:
+    print("Загрузите symbols!")
+
+'''Инициализация дисплея'''
+DRST = Pin(1, Pin.OUT)
+DRS  = Pin(4, Pin.OUT)
+DCS  = Pin(5, Pin.OUT)
+DSPIbus = SPI(0, baudrate=2000000, polarity=1, phase=1, sck=Pin(2), mosi=Pin(3), miso=Pin(0))
+
+Display = ST7565(DSPIbus, DRS, DCS, DRST)
+Display.set_contrast(0x25)
+
+'''Загружаем символы'''
+self.Display.loadsymbols('ЕНОПСУШ') #загружает в память определённые пользовательские символы
+#self.Display.loadallsymbols() загружает в память все пользовательские символы
+#self.Display.loadsymbol('<символ>') загружает в память один определённый символ
+
+'''Отображаем информацию'''
+Display.fill(0)
+#ctext является полным аналогом text, но с заменой символов
+Display.ctext('!!!УСПЕШНО!!!',   0, 1, 1)
+Display.show()
+```
+
+Для примера работы был выбран наш форк библеотеки "micropython-st7565" (https://github.com/Immersive-programs/micropython-st7565)
+
+<details>
+<summary> <b>Добавление своих символов</b> (<i>нажмите, чтобы развернуть</i>)</summary>
+
+####
+- 1.В папке <b><i>symbols</i></b> создайте новый файл <b><i><Символ>.py</i></b> 
+- 2.Скопируйте код в файл: 
+```Python
+class char:
+    def draw(buf,x,y,index,col):
+        zero = x+8*index+1 #начальная позиция
+```
+- 3.Создайте свой символ
+<details>
+<summary> <b>Пример 'Ё'</b> (<i>нажмите, чтобы развернуть</i>)</summary>
+
+```Python
+class char:
+    def draw(buf,x,y,index,col):
+        zero = x+8*index+1
+        buf.line(zero,y+2,zero,y+6,col)
+        buf.line(zero+1,y+2,zero+1,y+6,col)
+        buf.line(zero,y+2,zero+4,y+2,col)
+        buf.line(zero,y+4,zero+3,y+4,col)
+        buf.line(zero,y+6,zero+4,y+6,col)
+        buf.pixel(zero+1,y,col)
+        buf.pixel(zero+3,y,col)
+```
+</details>
+
+- 4.Сохраните и проверте будет ли загружен символ в память
+
+</details>
+
+### Примечания:
+ - Разработка велась в Thonny IDE V4.0.2;
+ - Работоспособность проверена на: "MicroPython v1.19.1 on 2022-06-18";
+ - Использованный контроллер: "Raspberry Pi Pico";
+ - Для загрузки кода рекомендуется использовать Rshell: https://github.com/dhylands/rshell
+
+#### Автор кода: Денис
+
+</details>
